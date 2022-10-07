@@ -1,6 +1,6 @@
 import React, {Component, Fragment} from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import {  Button} from "react-bootstrap";
+import {  Button, Spinner} from "react-bootstrap";
 import axios from "axios";
 import _ from "lodash";
 const BACKEND_URL = "http://localhost:3000";
@@ -16,9 +16,15 @@ class App extends Component{
 
         const height = window.innerHeight;
 
+        const tasks = [];
+
+        const fetching_tasks = false;
+
         this.state = {
             width,
-            height
+            height,
+            tasks,
+            fetching_tasks
         };
 
     }
@@ -31,8 +37,13 @@ class App extends Component{
             }
         };
 
+        this.setState({fetching_tasks: true});
+
+
         axios.get(GET_ALL_TASKS_ROUTE, config)
             .then(response => {
+
+                this.setState({fetching_tasks: false});
 
                 const data = response.data;
 
@@ -40,10 +51,14 @@ class App extends Component{
 
                 console.log(tasks);
 
+                this.setState({tasks: tasks});
+
 
             }).catch(error => {
 
-                console.log(error);
+            this.setState({fetching_tasks: false});
+
+            console.log(error);
 
         });
 
@@ -56,6 +71,70 @@ class App extends Component{
 
     }
 
+    renderBody(){
+
+        const { fetching_tasks } = this.state;
+
+        if(fetching_tasks){
+
+            return(
+
+               <div style={{
+                   display: 'flex',
+                   alignItems: 'center',
+                   justifyContent: 'center'
+               }}>
+
+                   <Spinner animation="border" variant="primary" style={{
+                       position: 'absolute',
+                       left: '48%',
+                       top: '48%'
+                   }} />
+
+               </div>
+
+
+            );
+
+        }else{
+
+            return(
+
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexDirection: 'column',
+                    marginTop: '3rem',
+                    marginBottom: '3rem'
+                }}>
+                    <p style={{
+                        fontSize: '40px',
+                        fontWeight: 'bold',
+                        marginBottom: '1rem'
+                    }}>
+                        Tasks
+                    </p>
+
+
+                    <Button
+                        variant="success"
+                        style={{
+                            borderRadius: '10px'
+                        }}
+                    >
+                        Create Task
+                    </Button>
+
+                </div>
+
+
+            );
+
+        }
+
+    }
+
     render(){
 
       return(
@@ -63,34 +142,7 @@ class App extends Component{
           <div>
 
 
-              <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexDirection: 'column',
-                  marginTop: '3rem',
-                  marginBottom: '3rem'
-              }}>
-                  <p style={{
-                      fontSize: '40px',
-                      fontWeight: 'bold',
-                      marginBottom: '1rem'
-                  }}>
-                      Tasks
-                  </p>
-
-
-                  <Button
-                      variant="success"
-                      style={{
-                          borderRadius: '10px'
-                      }}
-                  >
-                      Create Task
-                  </Button>
-
-              </div>
-
+              {this.renderBody()}
 
 
 
