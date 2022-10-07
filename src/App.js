@@ -7,6 +7,7 @@ const BACKEND_URL = "http://localhost:3000";
 const GET_ALL_TASKS_ROUTE = `${BACKEND_URL}/get-all-tasks`;
 const CREATE_TASK_ROUTE = `${BACKEND_URL}/create-task`;
 const DESTROY_TASK_ROUTE = `${BACKEND_URL}/destroy-task`;
+const EDIT_TASK_ROUTE = `${BACKEND_URL}/edit-task`;
 
 class App extends Component{
 
@@ -22,7 +23,7 @@ class App extends Component{
 
         const fetching_tasks = false;
 
-        const create_task_modal_visible = false;
+        const task_modal_visible = false;
 
         const text = "";
 
@@ -32,16 +33,22 @@ class App extends Component{
 
         const destroying_task = false;
 
+        const task_modal_mode = null; // 0: create, 1: edit
+
+        const selected_task_id = null;
+
         this.state = {
             width,
             height,
             tasks,
             fetching_tasks,
-            create_task_modal_visible,
+            task_modal_visible,
             text,
             modal_error,
             modal_loading,
-            destroying_task
+            destroying_task,
+            task_modal_mode,
+            selected_task_id
         };
 
     }
@@ -190,6 +197,13 @@ class App extends Component{
                                                <Dropdown.Item
                                                    onClick={() => {
 
+                                                       this.setState({
+                                                           task_modal_visible: true,
+                                                           task_modal_mode: 1,
+                                                           text: task.text,
+                                                           selected_task_id: task.id
+                                                       })
+
                                                    }}
                                                >
                                                    Edit Task
@@ -232,6 +246,62 @@ class App extends Component{
 
     }
 
+    editTask(id, text){
+
+
+        const config = {
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        let bodyFormData = this.getFormData({
+            text: text,
+            id: id
+        });
+
+        this.setState({modal_loading: true});
+
+        axios.post(EDIT_TASK_ROUTE, bodyFormData ,config)
+            .then(response => {
+
+                this.setState({modal_loading: false});
+
+                const data = response.data;
+
+                const success = data.success;
+
+                if(success){
+
+                    const tasks = data.tasks;
+
+                    this.setState({tasks: tasks});
+
+                    this.exitTaskModal();
+
+                }else{
+
+                    const message = data.message;
+
+                    this.setState({modal_error: message});
+
+                }
+
+
+
+
+            }).catch(error => {
+
+            this.setState({modal_loading: false});
+
+
+            console.log(error);
+
+        });
+
+
+    }
+
 
     createTask(text){
 
@@ -264,7 +334,7 @@ class App extends Component{
 
                     this.setState({tasks: tasks});
 
-                    this.exitCreateTaskModal();
+                    this.exitTaskModal();
 
                 }else{
 
@@ -290,18 +360,20 @@ class App extends Component{
     }
 
 
-    exitCreateTaskModal(){
+    exitTaskModal(){
 
         this.setState({
-            create_task_modal_visible: false,
+            task_modal_visible: false,
             text: "",
             modal_error: "",
-            modal_loading: false
+            modal_loading: false,
+            task_modal_mode: null,
+            selected_task_id: null
         });
 
     }
 
-    createTaskModalBody(){
+    taskModalBody(){
 
         const { modal_loading, modal_error, text } = this.state;
 
@@ -364,11 +436,11 @@ class App extends Component{
 
     }
 
-    createTaskModal(){
+    taskModal(){
 
-        const { create_task_modal_visible, text } = this.state;
+        const { task_modal_visible, text, task_modal_mode, selected_task_id } = this.state;
 
-        if(create_task_modal_visible){
+        if(task_modal_visible && task_modal_mode !== null){
 
             return(
 
@@ -377,22 +449,22 @@ class App extends Component{
                     size="lg"
                     aria-labelledby="contained-modal-title-vcenter"
                     centered
-                    show={create_task_modal_visible}
+                    show={task_modal_visible}
                     onHide={() => {
-                        this.exitCreateTaskModal();
+                        this.exitTaskModal();
                     }}
                 >
                     <Modal.Header closeButton>
 
                         <Modal.Title id="contained-modal-title-vcenter">
-                            Create Task
+                            {task_modal_mode === 0 ? "Create Task" : "Edit Task"}
                         </Modal.Title>
 
                     </Modal.Header>
 
                     <Modal.Body>
 
-                        {this.createTaskModalBody()}
+                        {this.taskModalBody()}
 
                     </Modal.Body>
 
@@ -415,18 +487,28 @@ class App extends Component{
 
                                 }else{
 
-                                    this.createTask(text)
+                                    if(task_modal_mode === 0){
+
+                                        this.createTask(text)
+
+                                    }else{
+
+                                        this.editTask(selected_task_id, text);
+
+                                    }
+
+
 
                                 }
 
                             }}>
-                            Create
+                            {task_modal_mode === 0 ? "Create" : "Update"}
                         </Button>
 
                         <Button
                             variant="secondary"
                             onClick={() => {
-                                this.exitCreateTaskModal();
+                                this.exitTaskModal();
                             }}>
                             Close
                         </Button>
@@ -494,7 +576,7 @@ class App extends Component{
                             marginBottom: '3rem'
                         }}
                         onClick={() => {
-                            this.setState({create_task_modal_visible: true});
+                            this.setState({task_modal_visible: true, task_modal_mode: 0});
                         }}
                     >
                         Create Task
@@ -502,7 +584,7 @@ class App extends Component{
 
                     {this.renderTasks()}
 
-                    {this.createTaskModal()}
+                    {this.taskModal()}
 
                 </div>
 
