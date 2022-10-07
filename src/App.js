@@ -1,6 +1,6 @@
 import React, {Component, Fragment} from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import {  Button, Spinner} from "react-bootstrap";
+import {  Button, Spinner, Table, Dropdown} from "react-bootstrap";
 import axios from "axios";
 import _ from "lodash";
 const BACKEND_URL = "http://localhost:3000";
@@ -71,6 +71,98 @@ class App extends Component{
 
     }
 
+
+
+
+    renderTasks(){
+
+        const { tasks } = this.state;
+
+        if(tasks.length > 0){
+
+            return(
+
+
+                <Table striped bordered hover style={{
+                    width: this.state.width / 1.1
+                }}>
+
+                    <thead>
+                    <tr>
+                        <th>Task</th>
+                        <th style={{width: '300px'}}></th>
+                    </tr>
+                    </thead>
+
+
+                    <tbody>
+
+                    {
+                       _.map(tasks, (task, index) => {
+
+                           return(
+
+                               <tr key={index}>
+                                   <td>{task.text}</td>
+                                   <td style={{
+                                       display: 'flex',
+                                       justifyContent: 'center',
+                                       width: '300px'
+                                   }}>
+
+                                       <Dropdown>
+
+                                           <Dropdown.Toggle
+                                               variant="success"
+                                           >
+                                               Options
+                                           </Dropdown.Toggle>
+
+                                           <Dropdown.Menu>
+
+                                               <Dropdown.Item
+                                                   onClick={() => {
+
+                                                   }}
+                                               >
+                                                   Edit Task
+                                               </Dropdown.Item>
+
+
+                                               <Dropdown.Item
+                                                   onClick={() => {
+
+                                                   }}
+                                               >
+                                                   Delete Task
+                                               </Dropdown.Item>
+
+
+                                           </Dropdown.Menu>
+
+
+                                       </Dropdown>
+
+
+                                   </td>
+                               </tr>
+
+                           );
+
+                       })
+                    }
+
+
+                    </tbody>
+
+                </Table>
+
+            );
+
+        }
+
+    }
+
     renderBody(){
 
         const { fetching_tasks } = this.state;
@@ -120,11 +212,14 @@ class App extends Component{
                     <Button
                         variant="success"
                         style={{
-                            borderRadius: '10px'
+                            borderRadius: '10px',
+                            marginBottom: '3rem'
                         }}
                     >
                         Create Task
                     </Button>
+
+                    {this.renderTasks()}
 
                 </div>
 
