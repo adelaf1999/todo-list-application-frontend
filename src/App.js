@@ -6,6 +6,7 @@ import _ from "lodash";
 const BACKEND_URL = "http://localhost:3000";
 const GET_ALL_TASKS_ROUTE = `${BACKEND_URL}/get-all-tasks`;
 const CREATE_TASK_ROUTE = `${BACKEND_URL}/create-task`;
+const DESTROY_TASK_ROUTE = `${BACKEND_URL}/destroy-task`;
 
 class App extends Component{
 
@@ -29,6 +30,8 @@ class App extends Component{
 
         const modal_loading = false;
 
+        const destroying_task = false;
+
         this.state = {
             width,
             height,
@@ -37,7 +40,8 @@ class App extends Component{
             create_task_modal_visible,
             text,
             modal_error,
-            modal_loading
+            modal_loading,
+            destroying_task
         };
 
     }
@@ -99,6 +103,42 @@ class App extends Component{
     }
 
 
+    deleteTask(id){
+
+
+        const config = {
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        let bodyFormData = this.getFormData({
+            id: id
+        });
+
+        this.setState({destroying_task: true});
+
+        axios.post(DESTROY_TASK_ROUTE, bodyFormData ,config)
+            .then(response => {
+
+
+                const data = response.data;
+
+                const tasks = data.tasks;
+
+                this.setState({tasks: tasks, destroying_task: false});
+
+
+            }).catch(error => {
+
+            this.setState({destroying_task: false});
+
+
+            console.log(error);
+
+        });
+
+    }
 
 
     renderTasks(){
@@ -158,6 +198,8 @@ class App extends Component{
 
                                                <Dropdown.Item
                                                    onClick={() => {
+
+                                                       this.deleteTask(task.id);
 
                                                    }}
                                                >
@@ -401,9 +443,9 @@ class App extends Component{
 
     renderBody(){
 
-        const { fetching_tasks } = this.state;
+        const { fetching_tasks, destroying_task} = this.state;
 
-        if(fetching_tasks){
+        if(fetching_tasks || destroying_task){
 
             return(
 
